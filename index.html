@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=Reem+Kufi:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=Reem+Kufi:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 @property --f{syntax:'<number>';inherits:false;initial-value:-.15}
 @property --wx{syntax:'<number>';inherits:false;initial-value:0}
@@ -21,8 +21,8 @@
   --cream:#efe3d1;
   --milk:#f8f2e9;
   --ink:#120a06;
-  --serif:"Instrument Serif",Georgia,serif;
-  --sans:"Inter Tight",system-ui,sans-serif;
+  --serif:"Instrument Serif","Amiri",Georgia,serif;
+  --sans:"Inter Tight","IBM Plex Sans Arabic",system-ui,sans-serif;
   --ar:"Reem Kufi",var(--sans);
   --ease:cubic-bezier(.16,1,.3,1);
   --gut:clamp(16px,4vw,48px);
@@ -340,6 +340,34 @@ nav ul a:hover::after{transform:scaleX(1);transform-origin:left}
 .lb .x{position:absolute;top:20px;right:var(--gut);z-index:2}
 @media (max-width:860px){.lb{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;overflow:auto}.lb aside{padding:0 24px 32px}.lb figure{padding-top:80px}.lb img{max-height:56svh}}
 
+/* language switch */
+.navr{display:flex;align-items:center;gap:14px}
+.lang{display:inline-grid;place-items:center;min-width:52px;height:52px;padding:0 14px;border-radius:999px;border:1px solid currentColor;font-size:14px;font-weight:500;transition:background .4s var(--ease),color .4s var(--ease)}
+.lang:hover{background:var(--milk);color:var(--espresso)}
+
+/* arabic / right to left */
+html[dir=rtl] .title,html[dir=rtl] .marquees,html[dir=rtl] .hscroll,html[dir=rtl] .anatomy .bigword,html[dir=rtl] .lb .nav,html[dir=rtl] .footer-word{direction:ltr}
+html[dir=rtl] .card,html[dir=rtl] .card.end{direction:rtl;text-align:right}
+html[dir=rtl] .card.end{align-items:flex-start}
+html[dir=rtl] .ar{text-align:right!important}
+html[lang=ar] body *{letter-spacing:0!important}
+html[lang=ar] .logo{letter-spacing:.3em!important}
+html[lang=ar] .logo i{letter-spacing:0!important}
+html[lang=ar] em,html[lang=ar] .italic{font-style:normal}
+html[lang=ar] :is(h2,h3,h4){line-height:1.22!important}
+html[lang=ar] .manifesto h2{line-height:1.45!important}
+html[lang=ar] .title{line-height:.78!important}
+html[lang=ar] .eyebrow{font-size:13px}
+html[dir=rtl] .manifesto h2 .w{margin-right:0;margin-left:.22em}
+html[dir=rtl] .day .t,html[dir=rtl] .item .pr{text-align:left}
+html[dir=rtl] .layers li{transform:translateX(12px)}
+html[dir=rtl] .layers li.on{transform:none}
+html[dir=rtl] .bar-photo .badge{left:auto;right:-7%}
+html[dir=rtl] .phone a.num,html[dir=rtl] a[href^="tel:"]{direction:ltr;unicode-bidi:isolate}
+/* mixed English lines inside the Arabic layout pick their own direction, so punctuation lands right */
+html[dir=rtl] :is(.ar,.concept span,.day .d small,.item .en small,.hero-top p,.manifesto .sub p,.footbar span,.cat-note,.lb .k){unicode-bidi:plaintext}
+@media (max-width:640px){.concept span:nth-child(2){display:none}.hero{padding-bottom:96px}}
+
 /* concept label */
 .concept{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:120;display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:10px 16px;border-radius:999px;background:rgba(18,10,6,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(239,227,209,.18);color:var(--cream);font-size:12px;line-height:1.35;letter-spacing:.02em;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .concept b{font-weight:600;color:var(--crema);white-space:nowrap}
@@ -376,7 +404,10 @@ nav ul a:hover::after{transform:scaleX(1);transform-origin:left}
     <li><a href="#delivery">Delivery</a></li>
     <li><a href="#visit">Visit</a></li>
   </ul>
-  <a href="#delivery" class="btn" data-magnetic>Order now</a>
+  <div class="navr">
+    <a class="lang" id="lang" href="?lang=ar">عربي</a>
+    <a href="#delivery" class="btn" data-magnetic>Order now</a>
+  </div>
 </nav>
 
 <main>
@@ -635,25 +666,123 @@ const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.config({ ignoreMobileResize: true });
 
+/* ---------- language: Arabic by default, ?lang=en for English ---------- */
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } },
+  set(k,v){ try { localStorage.setItem(k, v); } catch(e) {} }
+};
+let lang = new URLSearchParams(location.search).get('lang') || store.get('avana-lang') || 'ar';
+if (lang !== 'en') lang = 'ar';
+store.set('avana-lang', lang);
+const AR = lang === 'ar';
+document.documentElement.lang = lang;
+document.documentElement.dir = AR ? 'rtl' : 'ltr';
+const langBtn = document.getElementById('lang');
+langBtn.textContent = AR ? 'EN' : 'عربي';
+langBtn.setAttribute('aria-label', AR ? 'Switch to English' : 'التبديل إلى العربية');
+langBtn.href = '?lang=' + (AR ? 'en' : 'ar');
+langBtn.addEventListener('click', e => {
+  e.preventDefault();
+  const next = AR ? 'en' : 'ar';
+  store.set('avana-lang', next);
+  try { sessionStorage.setItem('avana-skip-loader', '1'); } catch(_) {}
+  location.search = '?lang=' + next;
+});
+if (AR) {
+  document.title = 'أڤانا · قهوة مختصة · نسخة تجريبية';
+  const T = (sel, html, i = 0) => { const el = document.querySelectorAll(sel)[i]; if (el) el.innerHTML = html; };
+  [
+    ['.loader .row .eyebrow', 'قهوة مختصة', 0], ['.loader .row .eyebrow', 'حوطة سدير', 1], ['.loader .row .eyebrow', 'نحضّر لك', 2],
+    ['nav ul a', 'الكوب', 0], ['nav ul a', 'القائمة', 1], ['nav ul a', 'التوصيل', 2], ['nav ul a', 'زورونا', 3],
+    ['.navr .btn', 'اطلب الآن'],
+    ['.hero-top p', 'قهوة مختصة وأكثر. تُحضَّر على مهل في حوطة سدير، لمن يتذوّق الفرق.', 0],
+    ['.hero-top p', 'Glory to a cup worthy of your taste', 1],
+    ['.scroll-cue', '<span class="line"></span>حرّك واستكشف'],
+    ['.hero-bottom .eyebrow', 'حوطة سدير · المملكة العربية السعودية'],
+    ['.hero-bottom .btn', 'استعرض القائمة'],
+    ['.manifesto > .eyebrow', 'بياننا'],
+    ['#manifesto', 'المجد لكوب <em>ينتظرك.</em> حبوب مختارة بشغف، محمّصة بصبر، ومحضّرة <em>بعناية.</em> ما بقي عليك إلا أن تتمهّل وتتذوّق.'],
+    ['.manifesto .sub p', 'بدأت أڤانا بفكرة عنيدة: البلدة الصغيرة تستحق كوبًا بمستوى عالمي. كل مشروب على البار يُوزن ويُوقَّت ويُتذوَّق قبل أن يصل إلى يدك.', 0],
+    ['.manifesto .sub p', 'Specialty coffee &amp; more, from Hawtat Sudair, made with love and detail.', 1],
+    ['.bar-copy .eyebrow', 'من البار · From the bar'],
+    ['.bar-copy h2', 'مو مجرد تصميم.<br><em>هذا كوبك</em> القادم.'],
+    ['.bar-copy p', 'يُحضَّر ويُبرَّد ويُقدَّم في كوب أڤانا البني، تمامًا كما يخرج من البار في حوطة سدير.'],
+    ['.bar-photo figcaption', '<span>مثلّج · كوب أڤانا البني</span><span>شكل ٠١</span>'],
+    ['.anatomy .col.left .eyebrow', 'تشريح الكوب'],
+    ['.anatomy .col.left h3', 'يُبنى<br><span style="color:var(--crema)">طبقة</span><br>فوق طبقة.'],
+    ['.anatomy .col.left p', 'مرّر لتسكب. كل كوب في أڤانا قطعة معمارية صغيرة. لا زيادة ولا نقصان.'],
+    ['.layers li > div', '<strong>إسبريسو</strong><span>يُضبط كل صباح</span>', 0],
+    ['.layers li > div', '<strong>حليب حريري</strong><span>يُبخَّر على ٦٠° بدون ما يحترق</span>', 1],
+    ['.layers li > div', '<strong>رغوة ناعمة</strong><span>لامعة ومخملية وجاهزة للرسم</span>', 2],
+    ['.layers li > div', '<strong>لحظتك</strong><span>Your moment</span>', 3],
+    ['.menu-head h2', 'قائمة<br><em>البار.</em>'],
+    ['.menu-head .ar', 'The bar menu'],
+    ['.menu-head .eyebrow', 'مشروباتنا المميزة، استمر بالتمرير'],
+    ['.board-head h3', 'القائمة <em>كاملة</em>'],
+    ['.board-head p', 'الأسعار بالريال السعودي. السعرات لكل كوب. حليب اللوز أو جوز الهند متوفر عند الطلب.'],
+    ['.ritual-head h2', 'من البذرة<br>إلى <em>الرشفة.</em>'],
+    ['.ritual-head p', 'أربع خطوات. بدون اختصارات. هكذا تصير الحبة كوبًا في يدك.'],
+    ['.step .txt > div', '<h3>المصدر<span class="ar">Origin</span></h3><p>دفعات معروفة المصدر من مزارع نعرفها بالاسم، نختارها لصفائها وحلاوتها وقصتها.</p>', 0],
+    ['.step .txt > div', '<h3>التحميص<span class="ar">Roast</span></h3><p>تحميص فاتح يحفظ النكهة الفاكهية، وعميق بما يكفي ليُخرج الكراميل. ملف تحميص لكل حبة.</p>', 1],
+    ['.step .txt > div', '<h3>التحضير<span class="ar">Brew</span></h3><p>موازين ومؤقتات وماء بالحرارة المضبوطة. إسبريسو أو V60 أو آيس دريب، تُضبط كل صباح.</p>', 2],
+    ['.step .txt > div', '<h3>أنت<span class="ar">You</span></h3><p>الخطوة الأخيرة والأهم. اجلس، ارتشف، وخذ وقتك، أو خلّنا نوصلها لباب بيتك.</p>', 3],
+    ['.numbers span', 'سنة من التحضير، والقصة مستمرة. عامنا الأول', 0],
+    ['.numbers span', 'مشروب على البار، حار وبارد', 1],
+    ['.numbers span', 'محب للقهوة يتابعوننا', 2],
+    ['.numbers span', 'قهوة مختصة في كل كوب', 3],
+    ['.perk > div:last-child', '<span class="ar">Loyalty</span><h3>نظام الولاء</h3><p>كل كوب يُحسب. اجمع مع كل زيارة، وخلّ الكوب الجاي علينا.</p>', 0],
+    ['.perk > div:last-child', '<span class="ar">Your milk</span><h3>حليبك</h3><p>حليب اللوز أو جوز الهند بدل الحليب العادي، على أي لاتيه أو ماتشا. اطلبه من البار.</p>', 1],
+    ['.perk > div:last-child', '<span class="ar">Seasons</span><h3>مواسم أڤانا</h3><p>ليالي رمضان، صيف أڤانا، ومشروبات العيد. قائمة تتغيّر مع المواسم.</p>', 2],
+    ['.del-head .eyebrow', 'توصيل · Delivery'],
+    ['.del-head h2', 'نوصّل<br><em>البار</em><br>لين عندك.'],
+    ['.del-head p.ar', 'صار عندنا توصيل، ورضاكم هدفنا.'],
+    ['.phone .eyebrow', 'اتصل أو راسلنا واتساب للطلب'],
+    ['.phone .ctas a', 'اتصل للطلب', 0],
+    ['.phone .ctas a', 'واتساب ↗', 1],
+    ['.fee', '<b>10<sup>ريال</sup></b><span>التوصيل داخل حوطة سدير</span><span class="ar">Inside Hawtat Sudair</span>', 0],
+    ['.fee', '<b>15<sup>ريال</sup></b><span>التوصيل خارج حوطة سدير</span><span class="ar">Outside Hawtat Sudair</span>', 1],
+    ['.fee.min', '<div><span style="margin:0;opacity:.9">أدنى حد للطلب</span><span class="ar" style="opacity:.7">Minimum order</span></div><b>25<sup>ريال</sup></b>'],
+    ['.hours-h .eyebrow', 'أوقات العمل · Opening hours'],
+    ['.day .d', 'من الأحد حتى الخميس<small>Sunday to Thursday</small>', 0],
+    ['.day .d', 'الجمعة و السبت<small>Friday &amp; Saturday</small>', 1],
+    ['.day .t', '8:00 ص إلى 2:00 م<br>4:00 م إلى 11:30 م', 0],
+    ['.day .t', '4:00 م إلى 11:30 م', 1],
+    ['.visit h2', 'تعالوا<br>لكوب.<br><em>وابقوا</em> عشان<br>الجو.'],
+    ['.visit .info > div', '<div class="eyebrow">الموقع</div><div class="ar">حوطة سدير 📍</div><div>حوطة سدير، منطقة الرياض، المملكة العربية السعودية</div>', 0],
+    ['.visit .info > div', '<div class="eyebrow">المواعيد</div><div>الأحد إلى الخميس: 8 ص إلى 2 م، و4 م إلى 11:30 م<br>الجمعة والسبت: 4 م إلى 11:30 م</div>', 1],
+    ['.visit .info > div', '<div class="eyebrow">تواصل معنا</div><a class="u" href="tel:+966555243940">+966 55 524 3940</a>', 2],
+    ['.visit .ctas a', 'افتح في الخرائط ↗', 0],
+    ['.footnote', 'نسخة تجريبية من تصميم <a class="u" href="https://showcasecreativehouse.com" target="_blank" rel="noopener">SHOWCASE Creative House</a> لأڤانا. ليست الموقع الرسمي لأڤانا. صور المشروبات مؤقتة من Unsplash، والأسعار مأخوذة من حساب أڤانا العام في إنستغرام وقد تتغير.'],
+    ['.footbar', '<span>نسخة تجريبية لأڤانا للقهوة المختصة</span><span>Specialty coffee &amp; more</span><a href="#top">للأعلى ↑</a>'],
+    ['.concept', '<span><b>نسخة تجريبية</b> من تصميم <a href="https://showcasecreativehouse.com" target="_blank" rel="noopener">SHOWCASE Creative House</a>. ليست الموقع الرسمي لأڤانا.</span><span>Concept preview. Not the official AVANA website.</span>'],
+    ['#lb .x', 'إغلاق ✕'],
+  ].forEach(([s, h, i]) => T(s, h, i));
+  document.querySelector('.cursor span').textContent = 'عرض';
+}
+
 /* ---------- signature cards (real prices from the AVANA menu) ---------- */
 const drinks = [
-  {en:'Avana Latte', ar:'أڤانا لاتيه', img:'avana-latte', d:'The house signature. Our latte, done the AVANA way.', price:'Hot 17 · Iced 18', cal:'247 / 214 cal'},
-  {en:'Spanish Latte', ar:'سبانيش لاتيه', img:'spanish-latte', d:'Espresso, silk milk and a slow ribbon of sweetness.', price:'Hot 15 · Iced 16', cal:'214 / 223 cal'},
-  {en:'Pistachio Latte', ar:'بستاشيو لاتيه', img:'pistachio-latte', d:'Nutty, creamy and quietly addictive.', price:'Hot 16 · Iced 18', cal:'223 / 252 cal'},
-  {en:'V60', ar:'في ٦٠', img:'v60', d:'Hand poured filter. Bright, clean, built to show off the origin.', price:'14', cal:'3 cal'},
-  {en:'Flat White', ar:'فلات وايت', img:'flat-white', d:'Double shot, thin velvet milk. Small cup, big opinion.', price:'Hot 14 · Iced 15', cal:'120 cal'},
-  {en:'Matcha Latte', ar:'ماتشا لاتيه', img:'matcha', d:'Whisked to order and layered over cold milk, or served hot.', price:'16', cal:'Hot or iced'},
-  {en:'Pinky Matcha', ar:'بينكي ماتشا', img:'pinky-matcha', d:'Matcha with a blush of pink. The "& more" part.', price:'18', cal:'Hot or iced'},
-  {en:'Hibiscus Mojito', ar:'كركديه', img:'hibiscus', d:'Deep red hibiscus over ice. Tart, cold, no coffee needed.', price:'17', cal:'49 cal'},
+  {en:'Avana Latte', ar:'أڤانا لاتيه', img:'avana-latte', d:'The house signature. Our latte, done the AVANA way.', da:'توقيع البيت. اللاتيه على طريقة أڤانا.', price:'Hot 17 · Iced 18', pa:'حار 17 · بارد 18', cal:'247 / 214 cal', ca:'247 / 214 سعرة'},
+  {en:'Spanish Latte', ar:'سبانيش لاتيه', img:'spanish-latte', d:'Espresso, silk milk and a slow ribbon of sweetness.', da:'إسبريسو وحليب حريري ولمسة حلاوة هادئة.', price:'Hot 15 · Iced 16', pa:'حار 15 · بارد 16', cal:'214 / 223 cal', ca:'214 / 223 سعرة'},
+  {en:'Pistachio Latte', ar:'بستاشيو لاتيه', img:'pistachio-latte', d:'Nutty, creamy and quietly addictive.', da:'كريمي بنكهة الفستق، ويعلّقك بهدوء.', price:'Hot 16 · Iced 18', pa:'حار 16 · بارد 18', cal:'223 / 252 cal', ca:'223 / 252 سعرة'},
+  {en:'V60', ar:'في ستين', img:'v60', d:'Hand poured filter. Bright, clean, built to show off the origin.', da:'تقطير يدوي. نقي وواضح، يبرز نكهة المحصول.', price:'14', pa:'14', cal:'3 cal', ca:'3 سعرات'},
+  {en:'Flat White', ar:'فلات وايت', img:'flat-white', d:'Double shot, thin velvet milk. Small cup, big opinion.', da:'شوتين وحليب مخملي خفيف. كوب صغير وطعم كبير.', price:'Hot 14 · Iced 15', pa:'حار 14 · بارد 15', cal:'120 cal', ca:'120 سعرة'},
+  {en:'Matcha Latte', ar:'ماتشا لاتيه', img:'matcha', d:'Whisked to order and layered over cold milk, or served hot.', da:'ماتشا تُخفق عند الطلب، باردة فوق الحليب أو حارة.', price:'16', pa:'16', cal:'Hot or iced', ca:'حار أو بارد'},
+  {en:'Pinky Matcha', ar:'بينكي ماتشا', img:'pinky-matcha', d:'Matcha with a blush of pink. The "& more" part.', da:'ماتشا بلمسة وردية. هذا جزء "وأكثر".', price:'18', pa:'18', cal:'Hot or iced', ca:'حار أو بارد'},
+  {en:'Hibiscus Mojito', ar:'موهيتو كركديه', img:'hibiscus', d:'Deep red hibiscus over ice. Tart, cold, no coffee needed.', da:'كركديه أحمر غامق على الثلج. منعش وحامض، بدون قهوة.', price:'17', pa:'17', cal:'49 cal', ca:'49 سعرة'},
 ];
+const L = d => AR
+  ? { name: d.ar, alt: d.en, desc: d.da, price: d.pa + ' ريال', cal: d.ca }
+  : { name: d.en, alt: d.ar, desc: d.d, price: d.price + ' SAR', cal: d.cal };
 const track = document.getElementById('htrack');
-track.innerHTML = drinks.map((d,i) => `
+track.innerHTML = drinks.map((d,i) => { const t = L(d); return `
   <article class="card" data-cursor>
-    <img src="images/menu/${d.img}.jpg" alt="${d.en}" loading="lazy" decoding="async">
-    <div class="top"><span>${String(i+1).padStart(2,'0')}<span style="opacity:.6"> /${String(drinks.length).padStart(2,'0')}</span></span><span class="price">${d.price} SAR</span></div>
-    <div class="meta"><h4>${d.en}</h4><span class="ar">${d.ar}</span><p>${d.d}</p><span class="cal">${d.cal}</span></div>
-  </article>`).join('') + `
-  <article class="card end"><h4 class="serif">See the <em>full</em> menu.</h4><p style="opacity:.8;font-size:14px;line-height:1.6">Thirty drinks, from a 9 SAR espresso to the full matcha bar.</p><a class="btn" href="#board">Full menu ↓</a></article>`;
+    <img src="images/menu/${d.img}.jpg" alt="${t.name}" loading="lazy" decoding="async">
+    <div class="top"><span>${String(i+1).padStart(2,'0')}<span style="opacity:.6"> /${String(drinks.length).padStart(2,'0')}</span></span><span class="price">${t.price}</span></div>
+    <div class="meta"><h4>${t.name}</h4><span class="ar">${t.alt}</span><p>${t.desc}</p><span class="cal">${t.cal}</span></div>
+  </article>`; }).join('') + (AR ? `
+  <article class="card end"><h4 class="serif">شوف القائمة <em>كاملة.</em></h4><p style="opacity:.8;font-size:15px;line-height:1.7">أكثر من ثلاثين مشروب، من إسبريسو بـ 9 ريال إلى بار الماتشا كامل.</p><a class="btn" href="#board">القائمة كاملة ↓</a></article>` : `
+  <article class="card end"><h4 class="serif">See the <em>full</em> menu.</h4><p style="opacity:.8;font-size:14px;line-height:1.6">Thirty drinks, from a 9 SAR espresso to the full matcha bar.</p><a class="btn" href="#board">Full menu ↓</a></article>`);
 
 /* ---------- full menu board ---------- */
 const menu = [
@@ -666,20 +795,21 @@ const menu = [
     ['Iced Spanish Latte','آيس سبانيش لاتيه',16,223],['Iced Avana Latte','آيس أڤانا لاتيه',18,214],['Iced Pistachio Latte','آيس بستاشيو لاتيه',18,252]]},
   {en:'Drip', ar:'القهوة المقطرة', items:[
     ['Coffee of the Day','قهوة اليوم',10,3],['Iced Coffee of the Day','آيس قهوة اليوم',11,3],['V60','في ٦٠',14,3],['Iced Drip','آيس دريب',15,3]]},
-  {en:'Matcha', ar:'ماتشا', note:'Hot or iced', items:[
+  {en:'Matcha', ar:'ماتشا', note:'Hot or iced', na:'حار أو بارد', items:[
     ['Classic Matcha','كلاسيك ماتشا',15],['Matcha Latte','ماتشا لاتيه',16],['Sweet Matcha','سويت ماتشا',18],['Pinky Matcha','بينكي ماتشا',18]]},
   {en:'Mojito', ar:'موهيتو', items:[
     ['Avana Mojito','موهيتو أڤانا',16,150],['Hibiscus','كركديه',17,49]]},
-  {en:'Milk Alternatives', ar:'بدائل الحليب', note:'On any milk drink', items:[
+  {en:'Milk Alternatives', ar:'بدائل الحليب', note:'On any milk drink', na:'على أي مشروب بالحليب', items:[
     ['Almond Milk','لوز'],['Coconut Milk','جوز هند']]},
 ];
+const cur$ = AR ? 'ريال' : 'SAR', cal$ = AR ? 'سعرة' : 'CAL', ask$ = AR ? 'اسأل' : 'Ask';
 document.getElementById('cats').innerHTML = menu.map(c => `
   <div class="cat">
-    <div class="cat-h"><h4>${c.en}</h4><span class="ar">${c.ar}</span></div>
-    ${c.note ? `<div class="cat-note">${c.note}</div>` : ''}
+    <div class="cat-h"><h4>${AR ? c.ar : c.en}</h4><span class="ar">${AR ? c.en : c.ar}</span></div>
+    ${c.note ? `<div class="cat-note">${AR ? c.na : c.note}</div>` : ''}
     ${c.items.map(([en,ar,p,cal]) => `
-      <div class="item"><span class="en">${en}<small>${ar}</small></span><span class="lead"></span>
-      <span class="pr">${p != null ? p + '<sup>SAR</sup>' : '<span style="font-size:15px;font-family:var(--sans)">Ask</span>'}${cal != null ? `<small>${cal} CAL</small>` : ''}</span></div>`).join('')}
+      <div class="item"><span class="en">${AR ? ar : en}<small${AR ? ' style="font-family:var(--sans)"' : ''}>${AR ? en : ar}</small></span><span class="lead"></span>
+      <span class="pr">${p != null ? p + `<sup>${cur$}</sup>` : `<span style="font-size:15px;font-family:var(--sans)">${ask$}</span>`}${cal != null ? `<small>${cal} ${cal$}</small>` : ''}</span></div>`).join('')}
   </div>`).join('');
 
 /* ---------- open now (Riyadh time) ---------- */
@@ -691,10 +821,13 @@ document.getElementById('cats').innerHTML = menu.map(c => `
   const weekday = day <= 4;
   const slots = weekday ? [[480,840],[960,1410]] : [[960,1410]];
   const open = slots.some(([a,b]) => m >= a && m < b);
+  const S = AR
+    ? { open:'مفتوح الآن', closed:'مغلق الآن', o8:' · يفتح 8 ص', o4:' · يفتح 4 م', t4:' · يفتح غدًا 4 م', t8:' · يفتح غدًا 8 ص' }
+    : { open:'Open now', closed:'Closed now', o8:' · opens 8 AM', o4:' · opens 4 PM', t4:' · opens 4 PM tomorrow', t8:' · opens 8 AM tomorrow' };
   let next = '';
-  if (!open) { const s = slots.find(([a]) => m < a); next = s ? (s[0] === 480 ? ' · opens 8 AM' : ' · opens 4 PM') : ((day === 4 || day === 5) ? ' · opens 4 PM tomorrow' : ' · opens 8 AM tomorrow'); }
+  if (!open) { const s = slots.find(([a]) => m < a); next = s ? (s[0] === 480 ? S.o8 : S.o4) : ((day === 4 || day === 5) ? S.t4 : S.t8); }
   el.classList.toggle('open', open);
-  el.querySelector('em').textContent = open ? 'Open now' : 'Closed now' + next;
+  el.querySelector('em').textContent = open ? S.open : S.closed + next;
   document.querySelectorAll('.day').forEach(d => d.classList.toggle('today', d.dataset.days.split(',').includes(String(day))));
 })();
 
@@ -713,8 +846,10 @@ if (!reduce) {
 
 /* ---------- photo viewer: everything that shows the VIEW cursor opens here ---------- */
 const views = [
-  { src:'images/cup-brown-crop.jpg', k:'From the bar', h:'AVANA brown cup', ar:'من البار', p:'Iced, pulled and sleeved exactly how it leaves our counter in Hawtat Sudair.', pr:'' },
-  ...drinks.map((d,i) => ({ src:`images/menu/${d.img}.jpg`, k:`Signature ${String(i+1).padStart(2,'0')} of ${String(drinks.length).padStart(2,'0')}`, h:d.en, ar:d.ar, p:d.d, pr:`${d.price} SAR` }))
+  AR ? { src:'images/cup-brown-crop.jpg', k:'من البار', h:'كوب أڤانا البني', ar:'From the bar', p:'مثلّج ومحضّر ومقدَّم تمامًا كما يخرج من البار في حوطة سدير.', pr:'' }
+     : { src:'images/cup-brown-crop.jpg', k:'From the bar', h:'AVANA brown cup', ar:'من البار', p:'Iced, pulled and sleeved exactly how it leaves our counter in Hawtat Sudair.', pr:'' },
+  ...drinks.map((d,i) => { const t = L(d), n = String(i+1).padStart(2,'0'), of = String(drinks.length).padStart(2,'0');
+    return { src:`images/menu/${d.img}.jpg`, k: AR ? `مشروب مميز ${n} من ${of}` : `Signature ${n} of ${of}`, h:t.name, ar:t.alt, p:t.desc, pr:t.price }; })
 ];
 document.querySelector('.bar-photo').dataset.view = 0;
 track.querySelectorAll('.card:not(.end)').forEach((c, i) => c.dataset.view = i + 1);
@@ -831,9 +966,12 @@ gsap.set('.title span b', { yPercent: 105, y: 0 });
 const intro = gsap.timeline({ paused: true })
   .to('.title span b', { yPercent: 0, duration: 1.4, ease: 'expo.out', stagger: .08 })
   .from('[data-fade]', { opacity: 0, y: 20, duration: 1, ease: 'power3.out', stagger: .08 }, '-=1');
-if (reduce) {
+// switching language reloads the page; skip the counter so it feels instant
+let skipLoader = false;
+try { skipLoader = !!sessionStorage.getItem('avana-skip-loader'); sessionStorage.removeItem('avana-skip-loader'); } catch(_) {}
+if (reduce || skipLoader) {
   document.querySelector('.loader').remove(); document.body.classList.remove('loading');
-  intro.progress(1);
+  reduce ? intro.progress(1) : intro.play();
 } else {
   lenis && lenis.stop();
   const o = { v: 0 };
